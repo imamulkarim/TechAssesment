@@ -530,7 +530,7 @@ To test the complete approval workflow:
 Interactive API documentation available at:
 
 ```
-https://localhost:7081/swagger/ui
+https://techasses-e5e0f6e0g8hrbmab.southeastasia-01.azurewebsites.net/swagger/index.html
 ```
 
 **Swagger Features:**
@@ -542,9 +542,14 @@ https://localhost:7081/swagger/ui
 ### API Base URL
 
 ```
-https://localhost:7081/api
+https://techasses-e5e0f6e0g8hrbmab.southeastasia-01.azurewebsites.net/api
 ```
 
+### FrontEnd URL
+
+```
+https://techasses-e5e0f6e0g8hrbmab.southeastasia-01.azurewebsites.net/
+```
 
 ## Help
 To learn more about the template go to the [project website](https://cleanarchitecture.jasontaylor.dev). Here you can find additional guidance, request new features, report a bug, and discuss the template with other users.
