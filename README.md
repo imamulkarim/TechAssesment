@@ -54,6 +54,94 @@ The project was generated using the [Clean.Architecture.Solution.Template](https
 
 ---
 
+## 📊 VISUAL WORKFLOW & QUICK START GUIDE
+
+### 🎯 System Overview Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    SPONSORSHIP WORKFLOW SYSTEM                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│                          REQUESTOR                               │
+├──────────────────────────────────────────────────────────────────┤
+│  1. Create Request (Draft)                                       │
+│  2. Edit & Save Draft                                            │
+│  3. Submit for Approval → PendingManagerApproval                 │
+│  4. View Status & History                                        │
+│  5. Cancel (if not approved)                                     │
+└──────────────────────────────────────────────────────────────────┘
+                              ↓
+                    ┌─────────────────┐
+                    │    MANAGER      │
+                    ├─────────────────┤
+                    │  Review Request │
+                    │  - Approve      │→ PendingFinanceReview
+                    │  - Reject       │→ Rejected
+                    └─────────────────┘
+                              ↓ (if approved)
+                    ┌─────────────────┐
+                    │  FINANCE ADMIN  │
+                    ├─────────────────┤
+                    │  Final Review   │
+                    │  - Approve      │→ Approved ✓
+                    │  - Reject       │→ Rejected ✗
+                    └─────────────────┘
+                              ↓
+                    ┌─────────────────┐
+                    │  SYSTEM ADMIN   │
+                    ├─────────────────┤
+                    │  View All       │
+                    │  View History   │
+                    │  Export Data    │
+                    └─────────────────┘
+```
+
+---
+
+## 🔄 Data Flow Diagram
+
+```
+FRONTEND (Angular)                 BACKEND (.NET 10)
+━━━━━━━━━━━━━━━━━━━━━━━━          ━━━━━━━━━━━━━━━━━━
+
+┌─────────────────┐                ┌──────────────┐
+│  Components     │                │  Endpoints   │
+│  Dashboard      │────────────────│  GET/POST    │
+│  Form           │   HTTP/REST    │  PUT/DELETE  │
+│  Approval List  │────────────────│              │
+│  Detail         │                └──────┬───────┘
+│  Admin View     │                       │
+└────────┬────────┘                       ↓
+         │                        ┌──────────────────┐
+         │                        │ MediatR Pipeline │
+         │                        │ - Validators     │
+         │                        │ - Behaviors      │
+         │                        │ - Handlers       │
+         │                        └──────┬───────────┘
+         │                               ↓
+         │                        ┌──────────────────┐
+         ↓                        │ Application      │
+    ┌─────────────┐              │ Commands/Queries │
+    │ RxJS        │              └──────┬───────────┘
+    │ Services    │                     ↓
+    │ TypeScript  │              ┌──────────────────┐
+    └─────────────┘              │ Domain Logic     │
+                                 │ Entity Framework │
+                                 │ Repositories     │
+                                 └──────┬───────────┘
+                                        ↓
+                                 ┌──────────────────┐
+                                 │ PostgreSQL DB    │
+                                 │ - Requests       │
+                                 │ - Approvals      │
+                                 │ - Types          │
+                                 └──────────────────┘
+```
+
+---
+
 ## Project Structure
 
 ```
@@ -210,7 +298,7 @@ dotnet build
 
 ## Running the Application
 
-### Option 1: Direct WebAPI + Angular (Recommended for Development)
+### Option 1: Direct WebAPI + Angular 
 
 This approach runs the backend and frontend separately, giving you maximum control and faster feedback during development.
 
@@ -267,7 +355,7 @@ npm start
 
 ---
 
-### Option 2: Using .NET Aspire Orchestration
+### Option 2: Using .NET Aspire Orchestration (Recommended for Development)
 
 This approach uses .NET Aspire to orchestrate all services (database, API, frontend) with centralized dashboard.
 
@@ -457,595 +545,6 @@ https://localhost:7081/swagger/ui
 https://localhost:7081/api
 ```
 
-All endpoints use this base URL when called from the frontend.
-
-### Available Endpoints
-
-#### Sponsorship Requests (`/api/SponsorshipRequests`)
-Requestor-side operations for managing personal requests.
-
-- `GET /` - Get my sponsorship requests
-  - Returns: List of requests for current user
-  - Auth: Authenticated user
-
-- `POST /` - Create new sponsorship request
-  - Body: CreateSponsorshipRequestCommand
-  - Returns: Request ID
-  - Auth: Authenticated user
-
-- `GET /{id}` - Get request detail
-  - Returns: Full request details
-  - Auth: Authenticated user (owner)
-
-- `PUT /{id}` - Update draft request
-  - Body: UpdateSponsorshipRequestCommand
-  - Returns: 204 No Content
-  - Auth: Authenticated user (owner)
-
-- `POST /{id}/submit` - Submit request
-  - Returns: 204 No Content
-  - Auth: Authenticated user (owner)
-
-- `POST /{id}/cancel` - Cancel request
-  - Body: CancelRequestCommand
-  - Returns: 204 No Content
-  - Auth: Authenticated user (owner)
-
-#### Admin Requests (`/api/AdminRequests`)
-System admin-only operations for monitoring all requests.
-
-- `GET /` - Get all requests
-  - Returns: List of all requests with pagination
-  - Auth: SystemAdmin role required
-
-- `GET /{id}` - Get request detail with history
-  - Returns: Request with complete workflow history
-  - Auth: SystemAdmin role required
-
-#### Manager Approvals (`/api/ManagerApprovals`)
-Manager-specific approval operations.
-
-- `GET /` - Get pending manager approvals
-  - Returns: List of requests waiting for manager approval
-  - Auth: Manager role required
-
-- `POST /{id}/approve` - Approve request
-  - Body: ApproveRequestCommand
-  - Returns: 204 No Content
-  - Auth: Manager role required
-
-- `POST /{id}/reject` - Reject request
-  - Body: RejectRequestCommand
-  - Returns: 204 No Content
-  - Auth: Manager role required
-
-#### Finance Approvals (`/api/FinanceApprovals`)
-Finance admin-specific approval operations.
-
-- `GET /` - Get pending finance approvals
-  - Returns: List of requests waiting for finance approval
-  - Auth: FinanceAdmin role required
-
-- `POST /{id}/approve` - Approve request
-  - Body: ApproveRequestCommand
-  - Returns: 204 No Content
-  - Auth: FinanceAdmin role required
-
-- `POST /{id}/reject` - Reject request
-  - Body: RejectRequestCommand
-  - Returns: 204 No Content
-  - Auth: FinanceAdmin role required
-
-#### Sponsorship Types (`/api/SponsorshipTypes`)
-Read-only endpoint for sponsorship type reference data.
-
-- `GET /` - Get all sponsorship types
-  - Returns: List of available sponsorship types
-  - Auth: Authenticated users
-
-### Authentication
-
-All endpoints require JWT bearer token authentication. Include the token in request headers:
-
-```
-Authorization: Bearer <your-jwt-token>
-```
-
-**Token Flow:**
-1. User logs in via identity endpoint
-2. Backend returns JWT token
-3. Angular stores token in local storage
-4. All API requests include token in Authorization header
-5. Backend validates token before processing request
-
----
-
-## Troubleshooting
-
-### Common Issues & Solutions
-
-#### 1. PostgreSQL Connection Error
-
-**Error Message:**
-```
-Failed to connect to postgres://localhost:5432
-FATAL: database does not exist
-```
-
-**Solutions:**
-1. Verify PostgreSQL is running:
-   ```bash
-   # Windows
-   Get-Service postgresql*
-
-   # Linux
-   sudo systemctl status postgresql
-   ```
-
-2. Check connection string in `appsettings.json`:
-   ```json
-   "DefaultConnection": "Host=localhost;Port=5432;..."
-   ```
-
-3. Verify database exists:
-   ```bash
-   psql -U postgres -l | grep tech_assessment
-   ```
-
-4. Recreate database:
-   ```bash
-   psql -U postgres
-   CREATE DATABASE tech_assessment;
-   \q
-   ```
-
-#### 2. EF Core Migration Error
-
-**Error Message:**
-```
-The database cannot be dropped because it is currently open by 1 other session(s).
-```
-
-**Solution:**
-```bash
-# Close all connections
-psql -U postgres
-
-# In psql terminal:
-SELECT pg_terminate_backend(pg_stat_activity.pid) 
-FROM pg_stat_activity 
-WHERE pg_stat_activity.datname = 'tech_assessment' 
-AND pid <> pg_backend_pid();
-
-# Drop and recreate
-DROP DATABASE tech_assessment;
-CREATE DATABASE tech_assessment;
-
-# Exit psql
-\q
-
-# Re-run migrations
-cd src/Web
-dotnet ef database update
-```
-
-#### 3. Angular Build Error: ERESOLVE
-
-**Error Message:**
-```
-npm ERR! code ERESOLVE
-npm ERR! ERESOLVE unable to resolve dependency tree
-```
-
-**Solution:**
-```bash
-cd src/Web/ClientApp
-
-# Clear cache
-npm cache clean --force
-
-# Remove node_modules and lock file
-rm -rf node_modules package-lock.json
-
-# Use legacy peer dependencies flag
-npm install --legacy-peer-deps
-
-# Start development server
-npm start
-```
-
-#### 4. Port Already in Use
-
-**Error Message:**
-```
-Address 0.0.0.0:7081 already in use
-```
-
-**Solutions:**
-
-For .NET backend (ports 5000, 7081):
-```bash
-# Find process using port (Windows)
-netstat -ano | findstr :7081
-
-# Kill process
-taskkill /PID <PID> /F
-
-# Or find and kill on Linux:
-lsof -ti:7081 | xargs kill -9
-```
-
-For Angular frontend (port 4200):
-```bash
-cd src/Web/ClientApp
-
-# Use different port
-ng serve --port 4201
-
-# Or kill existing process
-# Windows
-netstat -ano | findstr :4200
-taskkill /PID <PID> /F
-
-# Linux
-lsof -ti:4200 | xargs kill -9
-```
-
-#### 5. CORS Error in Browser
-
-**Error Message:**
-```
-Access to XMLHttpRequest at 'https://localhost:7081/api/...' from origin 
-'http://localhost:4200' has been blocked by CORS policy
-```
-
-**Solution:**
-Backend already has CORS enabled for development. If error persists:
-
-1. Check `src/Web/Program.cs` contains:
-   ```csharp
-   app.UseCors(static builder => 
-       builder.AllowAnyMethod()
-           .AllowAnyHeader()
-           .AllowAnyOrigin());
-   ```
-
-2. Verify frontend API base URL is correct in services
-3. Clear browser cache and restart both services
-
-#### 6. Login Not Working
-
-**Error Messages:**
-```
-Invalid username or password
-User account is locked
-User not found
-```
-
-**Solutions:**
-1. Verify test user exists:
-   ```bash
-   psql -U postgres -d tech_assessment
-   SELECT UserName, Email FROM AspNetUsers;
-   ```
-
-2. Recreate database with seed data:
-   ```bash
-   cd src/Web
-   dotnet ef database drop -f
-   dotnet ef database update
-   ```
-
-3. Check user password format:
-   - Minimum 8 characters
-   - Must contain uppercase, lowercase, number, special character
-   - Example: `Requestor@123`
-
-4. Verify authentication is enabled in DependencyInjection:
-   ```csharp
-   builder.AddAuthentication(...).AddBearerToken(...);
-   ```
-
-#### 7. Swagger Shows No Endpoints
-
-**Error:**
-Swagger UI is blank or shows generic error.
-
-**Solutions:**
-1. Rebuild solution:
-   ```bash
-   dotnet build
-   ```
-
-2. Restart backend:
-   ```bash
-   cd src/Web
-   dotnet run
-   ```
-
-3. Clear browser cache:
-   - Press `Ctrl + Shift + Delete`
-   - Clear all browsing data
-
-4. Check backend logs:
-   - Look for Swagger generation errors
-   - Verify all endpoint classes implement `IEndpointGroup`
-
-#### 8. TypeScript Client Not Generating
-
-**Error Message:**
-```
-web-api-client.ts is missing or outdated
-```
-
-**Solution:**
-```bash
-cd src/Web/ClientApp
-
-# Regenerate from Swagger
-npm run generate-client
-
-# If script doesn't exist, run nswag directly:
-nswag run nswag.json
-
-# Restart Angular
-npm start
-```
-
-#### 9. Token Expiration Issues
-
-**Error:**
-401 Unauthorized after some time.
-
-**Solutions:**
-1. Login again - token has expired
-2. Check token expiration in identity configuration
-3. Implement token refresh logic (future enhancement)
-
-#### 10. Database Locked/Permission Issues
-
-**Error Message:**
-```
-permission denied for schema public
-role "user" does not exist
-```
-
-**Solution:**
-```bash
-psql -U postgres -d tech_assessment
-
-# Grant permissions to user
-GRANT ALL PRIVILEGES ON SCHEMA public TO assessment_user;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO assessment_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO assessment_user;
-```
-
-### Viewing Logs
-
-#### Backend Logs
-
-Run backend with detailed output:
-```bash
-cd src/Web
-dotnet run --verbosity detailed
-```
-
-Common log locations:
-- Console output: Printed to terminal
-- Event Log (Windows): Look for application errors
-- Syslog (Linux): `/var/log/syslog`
-
-#### Frontend Logs
-
-1. Open browser DevTools: `F12`
-2. Go to **Console** tab
-3. Common issues:
-   - Red errors: JavaScript/TypeScript errors
-   - Yellow warnings: Deprecation warnings
-   - Network errors: API call failures
-
-4. Go to **Network** tab to debug API calls:
-   - See all HTTP requests
-   - Check status codes (200, 401, 500, etc.)
-   - View request/response headers and body
-
-#### Database Logs
-
-Enable query logging:
-```bash
-psql -U postgres -d tech_assessment
-
--- Enable query logging
-ALTER SYSTEM SET log_statement = 'all';
-
--- Apply changes
-SELECT pg_reload_conf();
-
--- Check logs (on Linux):
-tail -f /var/log/postgresql/postgresql.log
-```
-
----
-
-## Development Workflow
-
-### Backend Development
-
-**Workflow for making backend changes:**
-
-1. **Make code changes** in Domain, Application, or Infrastructure layers
-
-2. **Create EF Core migration** (if database schema changes):
-   ```bash
-   cd src/Web
-   dotnet ef migrations add MigrationName
-   ```
-
-3. **Apply migrations**:
-   ```bash
-   dotnet ef database update
-   ```
-
-4. **Rebuild and test**:
-   ```bash
-   dotnet build
-   dotnet run
-   ```
-
-5. **Test in Swagger UI**:
-   - https://localhost:7081/swagger/ui
-   - Try endpoints directly in UI
-
-### Frontend Development
-
-**Workflow for making frontend changes:**
-
-1. **Make changes** to components, services, or models
-
-2. **Check for errors** in DevTools Console (F12)
-
-3. **Hot reload** happens automatically with `ng serve`
-
-4. **Test in browser**:
-   - http://localhost:4200
-   - Check Network tab for API calls
-
-5. **Generate updated client** (if backend API changes):
-   ```bash
-   cd src/Web/ClientApp
-   npm run generate-client
-   ```
-
-### Full Stack Integration Testing
-
-**End-to-end workflow:**
-
-1. **Start backend**:
-   ```bash
-   cd src/Web
-   dotnet run
-   ```
-
-2. **Start frontend**:
-   ```bash
-   cd src/Web/ClientApp
-   npm start
-   ```
-
-3. **Test complete workflow**:
-   - Navigate through UI
-   - Create/update requests
-   - Monitor Network tab for API calls
-   - Check console for errors
-
-4. **Common workflow test**:
-   - Login as Requestor
-   - Create and submit request
-   - Logout and login as Manager
-   - Approve request
-   - Logout and login as Finance
-   - Approve request
-   - Login as Admin and verify completion
-
-### Code Scaffolding
-
-The template includes scaffolding for common patterns:
-
-**Create new command**:
-```bash
-cd src/Application
-
-dotnet new ca-usecase \
-  --name MyNewCommand \
-  --feature-name MyFeature \
-  --usecase-type command \
-  --return-type void
-```
-
-**Create new query**:
-```bash
-cd src/Application
-
-dotnet new ca-usecase \
-  -n GetMyData \
-  -fn MyFeature \
-  -ut query \
-  -rt MyDataVm
-```
-
----
-
-## Code Styles & Formatting
-
-The project includes **EditorConfig** support for consistent coding styles:
-
-- File: `.editorconfig`
-- Applies to all developers across different editors (VS, VS Code, etc.)
-- Defines indentation, naming conventions, spacing, etc.
-
-All code should follow the established patterns in the solution.
-
----
-
-## Build
-
-Run build command to compile the solution:
-
-```bash
-dotnet build
-
-# With specific configuration
-dotnet build -c Release
-
-# Restore packages first
-dotnet restore
-dotnet build
-```
-
-Expected output:
-```
-Build succeeded
-(Some number) Warning(s)
-(Some number) Error(s)
-```
-
----
-
-## Additional Resources
-
-- **[.NET 10 Documentation](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-10)**
-- **[ASP.NET Core Minimal APIs](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis)**
-- **[Entity Framework Core](https://learn.microsoft.com/en-us/ef/core/)**
-- **[Angular Documentation](https://angular.io/docs)**
-- **[MediatR Documentation](https://github.com/jbogard/MediatR)**
-- **[NSwag Documentation](https://github.com/RicoSuter/NSwag)**
-- **[Clean Architecture Explained](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)**
-
----
-
-## Support
-
-For issues or questions:
-
-1. Check the [Troubleshooting](#troubleshooting) section
-2. Review application logs (backend and frontend)
-3. Create an issue with:
-   - Exact error message
-   - Steps to reproduce
-   - Your environment (OS, .NET version, Node version)
-   - Recent changes made
-
----
-
-**Last Updated**: 2024  
-**Framework**: .NET 10, Angular 18+  
-**Database**: PostgreSQL 12+  
-**Status**: Production Ready
-
-To run the tests:
-```bash
-dotnet test
-```
 
 ## Help
 To learn more about the template go to the [project website](https://cleanarchitecture.jasontaylor.dev). Here you can find additional guidance, request new features, report a bug, and discuss the template with other users.
