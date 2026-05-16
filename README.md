@@ -449,10 +449,10 @@ The database initialization script automatically creates the following test user
 
 | Username | Password | Role(s) | Purpose |
 |----------|----------|---------|---------|
-| `requestor@example.com` | `Requestor@123` | Requestor | Create and submit sponsorship requests |
-| `manager@example.com` | `Manager@123` | Manager | Approve/reject manager-level requests |
-| `finance@example.com` | `Finance@123` | FinanceAdmin | Approve/reject finance-level requests |
-| `admin@example.com` | `Admin@123` | SystemAdmin | View all requests, monitor workflow |
+| `requestor@example.com` | `Requestor1!` | Requestor | Create and submit sponsorship requests |
+| `manager@example.com` | `Manager1!` | Manager | Approve/reject manager-level requests |
+| `finance@example.com` | `Finance1!` | FinanceAdmin | Approve/reject finance-level requests |
+| `admin@example.com` | `Administrator1!` | SystemAdmin | View all requests, monitor workflow |
 
 ### Login Steps
 
